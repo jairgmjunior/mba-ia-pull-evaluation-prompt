@@ -24,12 +24,13 @@ from typing import List, Dict, Any
 from pathlib import Path
 from dotenv import load_dotenv
 from langsmith import Client
-from langchain import hub
 from langchain_core.prompts import ChatPromptTemplate
 from utils import check_env_vars, format_score, print_section_header, get_llm as get_configured_llm
 from metrics import evaluate_f1_score, evaluate_clarity, evaluate_precision
 
 load_dotenv()
+
+EVALUATION_THRESHOLD = 0.9
 
 
 def get_llm():
@@ -105,7 +106,14 @@ def create_evaluation_dataset(client: Client, dataset_name: str, jsonl_path: str
 def pull_prompt_from_langsmith(prompt_name: str) -> ChatPromptTemplate:
     try:
         print(f"   Puxando prompt do LangSmith Hub: {prompt_name}")
-        prompt = hub.pull(prompt_name)
+        client = Client()
+        try:
+            prompt = client.pull_prompt(
+                prompt_name,
+                dangerously_pull_public_prompt=True,
+            )
+        except TypeError:
+            prompt = client.pull_prompt(prompt_name)
         print(f"   ✓ Prompt carregado com sucesso")
         return prompt
 
@@ -245,13 +253,13 @@ def display_results(prompt_name: str, scores: Dict[str, float]) -> bool:
     print("=" * 50)
 
     print("\nMétricas Derivadas:")
-    print(f"  - Helpfulness: {format_score(scores['helpfulness'], threshold=0.9)}")
-    print(f"  - Correctness: {format_score(scores['correctness'], threshold=0.9)}")
+    print(f"  - Helpfulness: {format_score(scores['helpfulness'], threshold=EVALUATION_THRESHOLD)}")
+    print(f"  - Correctness: {format_score(scores['correctness'], threshold=EVALUATION_THRESHOLD)}")
 
     print("\nMétricas Base:")
-    print(f"  - F1-Score: {format_score(scores['f1_score'], threshold=0.9)}")
-    print(f"  - Clarity: {format_score(scores['clarity'], threshold=0.9)}")
-    print(f"  - Precision: {format_score(scores['precision'], threshold=0.9)}")
+    print(f"  - F1-Score: {format_score(scores['f1_score'], threshold=EVALUATION_THRESHOLD)}")
+    print(f"  - Clarity: {format_score(scores['clarity'], threshold=EVALUATION_THRESHOLD)}")
+    print(f"  - Precision: {format_score(scores['precision'], threshold=EVALUATION_THRESHOLD)}")
 
     average_score = sum(scores.values()) / len(scores)
 
@@ -259,17 +267,17 @@ def display_results(prompt_name: str, scores: Dict[str, float]) -> bool:
     print(f"📊 MÉDIA GERAL: {average_score:.4f}")
     print("-" * 50)
 
-    all_above_threshold = all(score >= 0.9 for score in scores.values())
-    passed = all_above_threshold and average_score >= 0.9
+    all_above_threshold = all(score >= EVALUATION_THRESHOLD for score in scores.values())
+    passed = all_above_threshold and average_score >= EVALUATION_THRESHOLD
 
     if passed:
-        print(f"\n✅ STATUS: APROVADO - Todas as métricas >= 0.9")
+        print(f"\n✅ STATUS: APROVADO - Todas as métricas >= {EVALUATION_THRESHOLD}")
     else:
         print(f"\n❌ STATUS: REPROVADO")
-        failed_metrics = [name for name, score in scores.items() if score < 0.9]
+        failed_metrics = [name for name, score in scores.items() if score < EVALUATION_THRESHOLD]
         if failed_metrics:
-            print(f"⚠️  Métricas abaixo de 0.9: {', '.join(failed_metrics)}")
-        print(f"⚠️  Média atual: {average_score:.4f} | Necessário: 0.9000")
+            print(f"⚠️  Métricas abaixo de {EVALUATION_THRESHOLD}: {', '.join(failed_metrics)}")
+        print(f"⚠️  Média atual: {average_score:.4f} | Necessário: {EVALUATION_THRESHOLD:.4f}")
 
     return passed
 
@@ -372,7 +380,7 @@ def main():
     print(f"Reprovados: {sum(1 for r in results_summary if not r['passed'])}\n")
 
     if all_passed:
-        print("✅ Todos os prompts atingiram todas as métricas >= 0.9!")
+        print(f"✅ Todos os prompts atingiram todas as métricas >= {EVALUATION_THRESHOLD}!")
         print(f"\n✓ Confira os resultados em:")
         print(f"  https://smith.langchain.com/projects/{project_name}")
         print("\nPróximos passos:")
@@ -381,7 +389,7 @@ def main():
         print("3. Faça commit e push para o GitHub")
         return 0
     else:
-        print("⚠️  Alguns prompts não atingiram todas as métricas >= 0.9")
+        print(f"⚠️  Alguns prompts não atingiram todas as métricas >= {EVALUATION_THRESHOLD}")
         print("\nPróximos passos:")
         print("1. Refatore os prompts com score baixo")
         print("2. Faça push novamente: python src/push_prompts.py")

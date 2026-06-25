@@ -136,10 +136,12 @@ Cada exemplo segue o padrão `BUG REPORT:` → `USER STORY:` com critérios Give
 
 ## Resultados Finais
 
-### Link do LangSmith
+### Links públicos
 
-- **Dashboard:** https://smith.langchain.com/projects/desafio-2
-- **Prompt v2:** https://smith.langchain.com/hub/test-jgmj/bug_to_user_story_v2
+- **Prompt v2 no LangSmith Hub:** https://smith.langchain.com/hub/test-jgmj/bug_to_user_story_v2
+- **Commit publicado do Prompt v2:** https://smith.langchain.com/prompts/bug_to_user_story_v2/d7d7dcba?organizationId=dbaa31bb-3ce0-42db-8ec8-37d763db8950
+- **Repositório GitHub:** https://github.com/jairgmjunior/mba-ia-pull-evaluation-prompt
+- **Dashboard do projeto:** https://smith.langchain.com/projects/desafio-2 (pode exigir acesso ao workspace do LangSmith)
 - **Dataset:** `desafio-2-eval` (15 exemplos)
 
 ### Resultado da Avaliação (aprovado)
@@ -178,14 +180,12 @@ Métricas Base:
 
 ### Screenshots e evidências LangSmith
 
-Salve capturas de tela na pasta `screenshots/` (ignorada pelo git) e referencie aqui:
+Como o dashboard do projeto pode exigir permissão do workspace, use os links públicos acima junto com screenshots das evidências abaixo:
 
 - [ ] Dashboard do projeto `desafio-2` com execuções do prompt v2
 - [ ] Dataset `desafio-2-eval` com 15 exemplos
 - [ ] Métricas finais >= 0.9 (terminal ou LangSmith)
 - [ ] Tracing detalhado de pelo menos 3 exemplos
-
-**Repositório GitHub:** https://github.com/jairgmjunior/mba-ia-pull-evaluation-prompt
 
 ---
 

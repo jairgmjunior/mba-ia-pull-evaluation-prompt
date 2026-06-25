@@ -13,7 +13,7 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-from langchain import hub
+from langsmith import Client
 from utils import save_yaml, check_env_vars, print_section_header
 
 load_dotenv()
@@ -51,7 +51,14 @@ def pull_prompts_from_langsmith() -> bool:
     """
     try:
         print(f"Puxando prompt: {PROMPT_IDENTIFIER}")
-        prompt_template = hub.pull(PROMPT_IDENTIFIER)
+        client = Client()
+        try:
+            prompt_template = client.pull_prompt(
+                PROMPT_IDENTIFIER,
+                dangerously_pull_public_prompt=True,
+            )
+        except TypeError:
+            prompt_template = client.pull_prompt(PROMPT_IDENTIFIER)
 
         system_prompt, user_prompt = _extract_messages(prompt_template)
 
